@@ -1,5 +1,5 @@
 package simple2D.player.character;
 
-public interface Character {
+public class TestC implements Character {
     
 }

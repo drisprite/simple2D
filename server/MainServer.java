@@ -3,105 +3,157 @@ package simple2D.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Iterator;
 
+import simple2D.player.Controller;
+import simple2D.player.Doll;
 import simple2D.player.Player;
+import simple2D.world.TestM;
+import simple2D.world.World;
 
 public class MainServer {
-    private static String ip = "127.0.0.1";
-    private static int port = 9000;
-    
-    private ServerSocket serverSocket = null;
-    private HashMap<Integer, DataOutputStream> clients = new HashMap<>();
+    private static ServerSocket serverSocket = null;
+    private static ArrayList<OutputStream> clients = new ArrayList<>();
+
+    private static World world = null;
 
     {
-        Collections.synchronizedMap(clients);
-    }
-    
-    public static void main(String[] args) {
-        new MainServer().start();
+        Collections.synchronizedList(clients);
     }
 
-    public void start() {
+    public MainServer(int port) {
+        world = new TestM();
+
         try {
             serverSocket = new ServerSocket(port);
-            System.out.println("Server Opened.");
-            
+            System.out.println("Server is ready.");
+
             while(serverSocket != null) {
-                System.out.println("Waiting for client...");
-                
+                System.out.println("Wait for connection...");
                 Socket socket = serverSocket.accept();
-                System.out.println("Found ya!");
-                
-                try {
-                    Receiver r = new Receiver(socket);
-                    r.start();
-                } catch(IOException error) {
-                    error.printStackTrace();
-                }
-            }    
-        } catch(IOException error) {
-            error.printStackTrace();
-            
-            serverSocket.close();
-            serverSocket = null;
-        }
-    }
-    
-    public void sendData(String data) {
-        Iterator iterator = clients.keySet().iterator();
-        
-        while(iterator.hasNext()) {
-            try {
-                DataOutputStream output = (DataOutputStream)clients.get(iterator.next());
-                output.writeUTF(data);
-            } catch(IOException error) {
-                error.printStackTrace();
+                System.out.println("Found a client. (" + socket.getInetAddress() + "/" + socket.getPort() + ")");
+
+                new Receiver(socket).start();
             }
-        }
-    }
-    
-    class Receiver extends Thread {
-        private Socket socket = null;
-        
-        private DataInputStream input = null;
-        private DataOutputStream output = null;
-        
-        Receiver(Socket socket) throws IOExecption {
-            this.socket = socket;
-            
-            input = new DataInputStream(socket.getInputStream());
-            output = new DataOutputStream(socket.getOutputStream());
-        }
-        
-        public void run() {
+        } catch(IOException error) {
+            // error.printStackTrace();
+        } finally {
             try {
-                int UID = input.readInt();
-                clients.put(UID, output);
-                
-                Iterator iterator = clients.keySet().iterator();
-                
-                while(iterator.hasNext()) {
-                    if(clients.size() > 1) {
-                        DataOutputStream output = (DataOutputStresm)clients.get(UID);
-                        output.writeUTF("add_player:" + iterator.next());
-                    } else break;
-                }
-                
-                while(input != null) {
-                    sendData(input.readUTF());
-                }
+                serverSocket.close();
             } catch(IOException error) {
                 error.printStackTrace();
             } finally {
-                clients.remove(UID);
-                sendData("remove_player:" + UID);
-
-                System.out.println(UID + " left the server.");
+                serverSocket = null;
+                System.out.println("Server closed.");
             }
-         }
+        }
+    }
+
+    // ================================================== //
+
+    public static World getWorld() {
+        return world;
+    }
+
+    public static void setWorld(World world) {
+        MainServer.world = world;
+    }
+
+    // ================================================== //
+
+    public static void sendToAll(String data) {
+        for(int i = 0; i < clients.size(); ++i) {
+            try {
+                DataOutputStream output = new DataOutputStream(clients.get(i));
+                output.writeUTF(data);
+            } catch(IOException error) {
+                // error.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new MainServer(9000);
+    }
+
+    class Receiver extends Thread {
+        private Socket socket = null;
+
+        public Receiver(Socket socket) {
+            this.socket = socket;
+        }
+
+        // ================================================== //
+
+        public void run() {
+            Player player = null;
+
+            try {
+                DataInputStream input = new DataInputStream(socket.getInputStream());
+                DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+
+                output.writeUTF("change_world::TestM");
+                
+                Iterator<Integer> iterator = world.getPlayers().keySet().iterator();
+                while(iterator.hasNext()) {
+                    output.writeUTF("add_player::" + iterator.next());
+                }
+
+                Doll doll = new Doll();
+                Controller controller = new Controller(doll, world);
+                
+                player = new Player(socket);
+                player.setController(controller);
+
+                world.add(player);
+                clients.add(socket.getOutputStream());
+
+                sendToAll("add_player::" + player.getUID());
+                output.writeUTF("add_me::" + player.getUID());
+
+                while(true) {
+                    interpret(input.readUTF());
+                }
+            } catch(IOException error) {
+                // error.printStackTrace();
+            } finally {
+                try {
+                    socket.close();
+                } catch(IOException error) {
+                    // error.printStackTrace();
+                } finally {
+                    try {
+                        clients.remove(socket.getOutputStream());
+                        world.remove(player);
+                    } catch(IOException error) {
+                        // error.printStackTrace();
+                    } finally {
+                        sendToAll("remove_player::" + player.getUID());
+                        socket = null;
+
+                        System.out.println(player.getUID() + " left the server.");
+                    }
+                }
+            }
+        }
+    }
+
+    public static void interpret(String datum) {
+        String[] data = datum.split("::");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+
+        if(data[0].equals("move")) {
+            Player player = world.find(Integer.parseInt(data[1]));
+            Doll doll = player.getController().getDoll();
+
+            doll.setX(Integer.parseInt(data[2]));
+            doll.setY(Integer.parseInt(data[3]));
+
+            sendToAll("move::" + player.getUID() + "::" + doll.getX() + "::" + doll.getY());
+        }
     }
 }

@@ -2,14 +2,16 @@ package simple2D.player;
 
 import simple2D.player.character.Character;
 
-public class Pawn {
-    private int x = 1, y = 1;
-    private int bx = 1, by = 1;
+public class Doll {
     private Character character = null;
+    private int x = 0, y = 0;
+    private int bx = 0, by = 0;
 
-    public Pawn() { }
+    public Character getCharacter() {
+        return character;
+    }
 
-    public Pawn(Character character) {
+    public void setCharacter(Character character) {
         this.character = character;
     }
 
@@ -37,13 +39,5 @@ public class Pawn {
 
     public int getBY() {
         return by;
-    }
-
-    public Character getCharacter() {
-        return character;
-    }
-
-    public void setCharacter(Character character) {
-        this.character = character;
     }
 }

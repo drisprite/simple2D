@@ -1,45 +1,33 @@
 package simple2D.player;
 
-import simple2D.world.World;
+import java.net.Socket;
 
 public class Player {
-    private int UID = 0;
-    private char initial = 'P';
-
     private Controller controller = null;
-    private Pawn pawn = null;
-    private World world = null;
+    private int UID = 0;
+
+    private Socket socket = null;
 
     {
-        UID = (int)(Math.random() * 1000);
+        UID = (int)(Math.random() * 100000);
     }
 
     public Player() { }
 
-    public Player(Controller controller) {
-        this.controller = controller;
-        
-        controller.setPlayer(this);
+    public Player(Socket socket) {
+        this.socket = socket;
     }
 
-    public Player(Controller controller, Pawn pawn) {
-        this.controller = controller;
-        this.pawn = pawn;
-
-        controller.setPlayer(this);
+    public Player(int UID) {
+        this.UID = UID;
     }
 
-    public int getUID() {
-        return UID;
+    public Player(Socket socket, int UID) {
+        this.socket = socket;
+        this.UID = UID;
     }
 
-    public char getInitial() {
-        return initial;
-    }
-
-    public void setInitial(char initial) {
-        this.initial = initial;
-    }
+    // ================================================== //
 
     public Controller getController() {
         return controller;
@@ -49,22 +37,19 @@ public class Player {
         this.controller = controller;
     }
 
-    public Pawn getPawn() {
-        return pawn;
+    public int getUID() {
+        return UID;
     }
 
-    public void setPawn(Pawn pawn) {
-        this.pawn = pawn;
+    public void setUID(int UID) {
+        this.UID = UID;
     }
 
-    public World getWorld() {
-        return world;
+    public Socket getSocket() {
+        return socket;
     }
 
-    public void setWorld(World world) {
-        this.world = world;
-        world.add(this);
-
-        controller.setWorld(world);
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 }
