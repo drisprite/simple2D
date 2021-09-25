@@ -32,6 +32,10 @@ public abstract class World {
         return players;
     }
 
+    public char[][] getField() {
+        return field;
+    }
+
     // ================================================== //
 
     public int getWorldX() {
